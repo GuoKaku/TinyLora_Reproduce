@@ -1,0 +1,79 @@
+model_name_or_path: Qwen/Qwen2.5-7B-Instruct
+dataset_name: openai/gsm8k
+dataset_config_name: main
+local_dataset_path: /scratch/gpfs/MENGDIW/jg8305/.cache/huggingface/gsm8k_local
+train_split: train
+eval_split: test
+output_dir: outputs/qwen25-7b-gsm8k-tinylora
+seed: 42
+
+# system_prompt: >-
+#   You are a careful math solver. Show your reasoning, then end with a single line exactly in the format:
+#   Final answer: <answer>.
+
+system_prompt: >-
+  You are a helpful math assistant. Solve the problem step by step.
+  End your response with the final numeric answer on its own line in the
+  form: #### <number>
+
+# Paper-like GRPO settings for GSM8K
+num_train_epochs: 3.0
+learning_rate: 1.0e-4
+# lr_scheduler_type: constant
+beta: 0.0
+num_generations: 4
+max_prompt_length: 1024
+max_completion_length: 1024
+temperature: 1.0
+top_p: 1.0
+top_k: 0
+repetition_penalty: 1.0
+
+# Choose these according to hardware. Effective batch = world_size * per_device * grad_accum.
+# The paper uses global batch size 64.
+per_device_train_batch_size: 8
+gradient_accumulation_steps: 8
+per_device_eval_batch_size: 2
+
+logging_steps: 1
+save_steps: 300
+save_total_limit: 2
+warmup_ratio: 0.0
+weight_decay: 0.0
+max_grad_norm: 1.0
+gradient_checkpointing: true
+bf16: true
+fp16: false
+tf32: true
+report_to: none
+use_vllm: true
+log_completions: false
+attn_implementation: flash_attention_2
+
+# TinyLoRA settings
+# PEFT docs recommend r=2.
+target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+tinylora_r: 2
+tinylora_u: 13
+tinylora_weight_tying: 1.0
+tinylora_dropout: 0.0
+projection_seed: 42
+save_projection: true
+init_weights: uniform
+init_v_bound: 0.02
+bias: none
+
+max_train_samples:
+max_eval_samples:
+
+eval_temperature: 0.0
+eval_max_new_tokens: 1024
+trust_remote_code: true
+torch_dtype: bfloat16

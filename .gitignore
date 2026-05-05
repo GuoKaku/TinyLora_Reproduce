@@ -1,0 +1,26 @@
+# ignore outputs and logs
+outputs/
+logs/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# virtual env
+venv/
+.env/
+
+# system
+.DS_Store
+
+# jupyter
+.ipynb_checkpoints/
+
+# large files (optional)
+*.pt
+*.ckpt
+*.bin
+.cache/
+configs/_runtime_*.yaml

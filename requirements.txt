@@ -1,0 +1,11 @@
+torch>=2.3
+transformers>=4.50.0
+datasets>=2.21.0
+accelerate>=0.34.0
+trl>=0.17.0
+PyYAML>=6.0
+sentencepiece>=0.2.0
+numpy>=1.26
+sympy>=1.13
+packaging>=24.0
+git+https://github.com/huggingface/peft.git
