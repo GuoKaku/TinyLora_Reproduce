@@ -4,7 +4,7 @@ This repository provides a clean Hugging Face / TRL training setup for reproduci
 
 ## High level structure of this repo
 
-We implemented Tinylora both from scratch and based on PEFT library. For PEFT library based implementation, please refer to `PEFT_implementation` folder, which contains the complete scripts/files to run training and evaluation experiments. For other folders/files, they are used to construct TinyLora from scratch.
+We implemented Tinylora both from scratch and based on PEFT library. For PEFT library based implementation, please refer to [`PEFT_implementation`](./PEFT_implementation) folder, which contains a seperate `README.md` to document the implementation, as well as the complete scripts/files to run training and evaluation experiments. For other folders/files, they are used to construct TinyLora from scratch.
 
 
 ## What this repo matches from the paper
