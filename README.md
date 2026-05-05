@@ -2,6 +2,11 @@
 
 This repository provides a clean Hugging Face / TRL training setup for reproducing the **TinyLoRA + GRPO** GSM8K setting from **Learning to Reason in 13 Parameters** using **PEFT's TinyLoRA implementation**.
 
+## High level structure of this repo
+
+We implemented Tinylora both from scratch and based on PEFT library. For PEFT library based implementation, please refer to `PEFT_implementation` folder, which contains the complete scripts/files to run training and evaluation experiments. For other folders/files, they are used to construct TinyLora from scratch.
+
+
 ## What this repo matches from the paper
 
 - Base model: `Qwen/Qwen2.5-7B-Instruct`

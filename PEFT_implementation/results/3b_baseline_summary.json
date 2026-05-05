@@ -1,0 +1,36 @@
+[
+  {
+    "label": "Qwen2.5-3B-Instruct | hash instruction",
+    "hash_only": 0.6959818043972706,
+    "hash_lastnum": 0.8544351781652767,
+    "flexible": 0.8544351781652767,
+    "method_hash_lastnum": {
+      "hash": 1075,
+      "last_num": 244,
+      "none": 0
+    },
+    "method_flexible": {
+      "hash": 1075,
+      "boxed": 90,
+      "last_num": 154,
+      "none": 0
+    }
+  },
+  {
+    "label": "Qwen2.5-3B-Instruct | natural prompt",
+    "hash_only": 0.0,
+    "hash_lastnum": 0.7937831690674754,
+    "flexible": 0.7968157695223654,
+    "method_hash_lastnum": {
+      "hash": 0,
+      "last_num": 1319,
+      "none": 0
+    },
+    "method_flexible": {
+      "hash": 0,
+      "boxed": 208,
+      "last_num": 1111,
+      "none": 0
+    }
+  }
+]
