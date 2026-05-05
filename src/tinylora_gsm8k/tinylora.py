@@ -37,8 +37,7 @@ class TinyLoraLinear(nn.Module):
         else:
             self.bias = None
 
-        # 对 W 做截断 SVD
-        # W shape: [out_features, in_features]
+
         with torch.no_grad():
             W = self.weight.data.float()
             U, S, Vh = torch.linalg.svd(W, full_matrices=False)
@@ -50,19 +49,15 @@ class TinyLoraLinear(nn.Module):
 
         self.rr = rr
 
-        # 保存冻结的 SVD 因子
         self.register_buffer("U", U.contiguous())
         self.register_buffer("S", S.contiguous())
         self.register_buffer("V", V.contiguous())
 
-        # 固定随机投影张量 P: [u, r, r]
         g = torch.Generator(device="cpu")
         g.manual_seed(projection_seed)
         P = torch.randn(u, rr, rr, generator=g, dtype=torch.float32) / math.sqrt(rr)
         self.register_buffer("P", P.contiguous())
 
-        # 可训练参数 v: [u]
-        # 如果传入 shared_v，就所有层共享同一个
         if shared_v is None:
             v = torch.empty(u, dtype=train_dtype)
             nn.init.uniform_(v, -init_v_bound, init_v_bound)
@@ -116,7 +111,6 @@ def apply_tinylora(model, cfg):
 
     weight_tying = float(getattr(cfg, "tinylora_weight_tying", 0.0))
 
-    # 全部共享：ntie = n*m，所有模块共享一个 v
     if weight_tying == 1.0:
         v = torch.empty(cfg.tinylora_u, dtype=torch.float32)
         nn.init.uniform_(v, -cfg.init_v_bound, cfg.init_v_bound)
@@ -124,13 +118,9 @@ def apply_tinylora(model, cfg):
         print(f"[TinyLoRA] Full tying: all modules share one v, shape={tuple(shared_v.shape)}")
         shared_v_map = {name: shared_v for name, _ in replacements}
 
-    # 完全不 tie：ntie = 1，每个模块独立一个 v
     elif weight_tying == 0.0:
         print(f"[TinyLoRA] No tying: each module gets its own v (ntie=1), total={len(replacements)} v params")
-        shared_v_map = {}  # 每个模块传 None，各自在 __init__ 里创建
 
-    # 按层 tie：weight_tying 表示每组共享的层数比例或绝对层数
-    # 这里用 group_size = int(weight_tying) 表示每几个模块共享一个 v
     else:
         group_size = max(1, int(weight_tying * len(replacements)))
         print(f"[TinyLoRA] Partial tying: group_size={group_size}, "
@@ -153,11 +143,10 @@ def apply_tinylora(model, cfg):
             projection_seed=cfg.seed,
             init_v_bound=cfg.init_v_bound,
             train_dtype=torch.float32,
-            shared_v=shared_v_map.get(name, None),  # None → 模块自己创建独立 v
+            shared_v=shared_v_map.get(name, None),  
         )
         setattr(parent, child_name, new_module)
 
-    # 冻结所有非 TinyLoRA 参数
     for n, p in model.named_parameters():
         if ".v" not in n:
             p.requires_grad = False

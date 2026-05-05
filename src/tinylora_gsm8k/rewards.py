@@ -26,7 +26,7 @@ def gsm8k_exact_match_reward(completions, ground_truth, **kwargs):
 
 
 def _extract_boxed(text: str) -> str:
-    """从文本中提取最后一个 \\boxed{} 的内容，支持嵌套花括号"""
+
     idx = text.rfind(r"\boxed{")
     if idx == -1:
         return ""

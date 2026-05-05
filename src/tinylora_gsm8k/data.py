@@ -17,7 +17,7 @@ def load_gsm8k_prompt_only_dataset(
     max_samples: int | None = None,
     cache_dir: str | None = None,
     local_dataset_path: str | None = None,
-    tokenizer=None,  # ← 新增
+    tokenizer=None,
 ) -> Dataset:
     ds = None
 
@@ -56,7 +56,6 @@ def load_gsm8k_prompt_only_dataset(
             )
             # print(prompt)
         else:
-            # fallback: 直接返回 message list，让 TRL 自己处理
             prompt = msgs
 
         return {
@@ -121,13 +120,12 @@ def load_math_prompt_only_dataset(
         }
 
     ds = ds.map(_map, remove_columns=ds.column_names)
-    # 过滤掉提取不到答案的样本
     ds = ds.filter(lambda x: x["ground_truth"] != "")
     return ds
 
 
 def _extract_boxed_from_solution(solution: str) -> str:
-    """从 solution 字段提取 \\boxed{} 内容"""
+
     idx = solution.rfind(r"\boxed{")
     if idx == -1:
         return ""

@@ -34,30 +34,46 @@ This repo therefore installs:
 pip install git+https://github.com/huggingface/peft.git
 ``` -->
 
+## Attribution and Code Organization
+
+The core implementation is under `src/tinylora_gsm8k/`.
+
+In particular:
+
+- `tinylora.py` implements the TinyLoRA module and the logic for replacing target `nn.Linear` layers with `TinyLoraLinear`. This is our main custom/nonstandard model component.
+- `train_grpo_nopeft.py` is the main training entry point. It uses HuggingFace Transformers and TRL's GRPO trainer as the training framework, while the TinyLoRA parameterization is implemented in this repository.
+- `data.py`, `prompts.py`, `rewards.py`, and `eval_gsm8k.py` contain dataset loading, prompt construction, reward computation, and evaluation utilities.
+
+Unless otherwise noted in the corresponding source files, the TinyLoRA implementation and training glue code are written by us. External libraries used in this project include PyTorch, HuggingFace Transformers, HuggingFace Datasets, TRL, PEFT, and vLLM.
+
 ## Repository layout
 
 ```text
 .
 ├── configs/
-│   ├── qwen25_7b_tinylora_gsm8k.yaml ##use this to change config 
-│   └── qwen25_7b_tinylora_gsm8k_debug.yaml
-plot_scripts/
-scripts/
-├── download.sh. ##for downloading dataset and model
-├── eval.sh. ##evaluate ckpts, no need to manually run
-├── train_nopeft.sh.    ##run this to start training
-├── train_nopeft_slurm.sh. ## run this to submit slurm job for training
+│   ├── qwen25_7b_tinylora.yaml          # Main training config
+│   └── qwen25_7b_tinylora_debug.yaml    # Debug config
+├── plot_scripts/
+├── scripts/
+│   ├── download.sh                      # Download model and dataset
+│   ├── eval.sh                          # Evaluate checkpoints
+│   ├── train_nopeft.sh                  # Run training locally
+│   └── train_nopeft_slurm.sh            # Submit training job with Slurm
 ├── src/tinylora_gsm8k/
+│   ├── arch/
 │   ├── __init__.py
 │   ├── config.py
-│   ├── data.py 
+│   ├── data.py
 │   ├── eval_gsm8k.py
 │   ├── prompts.py
-│   ├── rewards.py  
-│   ├── train_grpo.py. ## core file to construct TinyLora
+│   ├── rewards.py
+│   ├── tinylora.py                      # TinyLoRA layer replacement and parameterization
+│   ├── train_grpo.py
+│   ├── train_grpo_nopeft.py             # Main training script
 │   └── utils.py
 └── requirements.txt
-```
+
+
 
 ## Installation
 

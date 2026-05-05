@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=None)
     parser.add_argument("--torch_dtype", type=str, default=None)
     parser.add_argument("--check_weights", action="store_true")
-    parser.add_argument("--use_vllm", action="store_true")  # ← 新增
+    parser.add_argument("--use_vllm", action="store_true")  
     return parser.parse_args()
 
 
@@ -183,10 +183,7 @@ def _inspect_tinylora_modules(model, max_print=20):
 
 
 def merge_tinylora_to_state_dict(model) -> dict:
-    """
-    把 TinyLoRA 的 delta_weight 合并回 weight，
-    返回标准模型的 state_dict（vLLM 或 save 用）。
-    """
+
     from .tinylora import TinyLoraLinear
     merged_sd = {}
     for name, module in model.named_modules():
@@ -195,7 +192,6 @@ def merge_tinylora_to_state_dict(model) -> dict:
             if module.bias is not None:
                 merged_sd[name + ".bias"] = module.bias.detach().cpu()
 
-    # 其余非 TinyLoRA 参数直接取
     tinylora_prefixes = tuple(
         name + "." for name, module in model.named_modules()
         if module.__class__.__name__ == "TinyLoraLinear"
@@ -345,7 +341,7 @@ def main() -> None:
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
 
-    # 数据集加载：eval 优先用 eval_local_dataset_path，fallback 到 local_dataset_path
+
     eval_local_path = getattr(cfg, "eval_local_dataset_path", None)
     local_dataset_path = getattr(cfg, "local_dataset_path", None)
     load_path = eval_local_path or local_dataset_path
@@ -365,7 +361,7 @@ def main() -> None:
 
     print(f"[EVAL] Evaluating on {len(ds)} samples...")
 
-    # 根据 dataset_type 确定字段名
+
     if dataset_type == "gsm8k":
         question_field = "question"
         answer_field = "answer"
@@ -373,7 +369,7 @@ def main() -> None:
         question_field = "problem"
         answer_field = "solution"
 
-    # 构建所有 prompt
+
     all_prompts = []
     for q in ds[question_field]:
         msgs = [
@@ -387,7 +383,7 @@ def main() -> None:
         )
         all_prompts.append(prompt_text)
 
-    # 根据 dataset_type 选择 reward 函数
+
     if dataset_type == "gsm8k":
         def judge(completion_text: str, raw_answer: str):
             pred = extract_pred_answer(completion_text)
@@ -427,9 +423,6 @@ def main() -> None:
     correct = 0
     outputs = []
 
-    # ------------------------------------------------------------------ #
-    #  vLLM 模式                                                           #
-    # ------------------------------------------------------------------ #
     if args.use_vllm:
         from vllm import LLM, SamplingParams
         from transformers import AutoModelForCausalLM as _AMCL
@@ -468,7 +461,7 @@ def main() -> None:
             from transformers import AutoModelForCausalLM as _AMCL
             import tempfile
 
-            # 1. 加载 base model
+
             base_model = _AMCL.from_pretrained(
                 cfg.model_name_or_path,
                 torch_dtype=torch_dtype,
@@ -477,13 +470,13 @@ def main() -> None:
                 local_files_only=True,
             )
 
-            # 2. 加载 adapter
+
             model = PeftModel.from_pretrained(base_model, str(args.checkpoint_path))
 
-            # 3. merge adapter → base
+
             model = model.merge_and_unload()
 
-            # 4. 保存为标准 HF checkpoint（给 vLLM 用）
+
             tmp_dir = tempfile.mkdtemp(prefix="peft_merged_")
             model.save_pretrained(tmp_dir)
             tokenizer.save_pretrained(tmp_dir)
@@ -525,9 +518,7 @@ def main() -> None:
                 "completion": completion_text,
             })
 
-    # ------------------------------------------------------------------ #
-    #  普通 HuggingFace generate 模式                                      #
-    # ------------------------------------------------------------------ #
+
     else:
         BATCH_SIZE = 128
         print(f"[EVAL] HF generate mode, batch_size={BATCH_SIZE}")
@@ -579,9 +570,7 @@ def main() -> None:
                     "completion": completion_text,
                 })
 
-    # ------------------------------------------------------------------ #
-    #  保存结果                                                             #
-    # ------------------------------------------------------------------ #
+
     accuracy = correct / len(ds) if len(ds) else 0.0
     result = {
         "accuracy": accuracy,

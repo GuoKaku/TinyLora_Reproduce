@@ -29,12 +29,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def enable_offline_mode(cfg: ExperimentConfig) -> str | None:
-    # 强制走本地缓存，避免 compute node 访问外网
     os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
     os.environ.setdefault("HF_DATASETS_OFFLINE", "1")
     os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
-    # 统一缓存目录：优先读配置，其次读环境变量
     cache_dir = getattr(cfg, "cache_dir", None) or os.environ.get("HF_HOME")
 
     if cache_dir:
@@ -67,7 +65,6 @@ def main() -> None:
 
     print(f"ckpt 0: offline mode enabled, cache_dir={cache_dir}, effective_batch_size={effective_batch}, world_size={world_size}")
 
-    # 只加载 tokenizer，模型让 TRL 自己处理
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model_name_or_path,
         trust_remote_code=cfg.trust_remote_code,

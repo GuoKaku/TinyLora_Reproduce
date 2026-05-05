@@ -108,13 +108,12 @@ class PatchedGRPOTrainer(GRPOTrainer):
         """在 main() 里 trainer 初始化后调用一次，传入 eval 所需的上下文"""
         self._eval_cfg = cfg
         self._eval_tokenizer = tokenizer
-        self._eval_raw_dataset = eval_raw_dataset  # 原始 HF dataset（非 prompt-only）
+        self._eval_raw_dataset = eval_raw_dataset  
         self._eval_dataset_type = dataset_type
 
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval", zero_v=False):
         from .tinylora import TinyLoraLinear
 
-        # 备份并清零 v（测 pure base）
         v_backup = {}
         if zero_v:
             seen_ptrs = set()
@@ -250,7 +249,6 @@ class PatchedGRPOTrainer(GRPOTrainer):
             return metrics
 
         finally:
-            # 无论是否异常，都还原 v
             if zero_v:
                 for ptr, (v_param, backup) in v_backup.items():
                     v_param.data.copy_(backup)
@@ -351,7 +349,6 @@ def main() -> None:
     trainable, total = count_trainable_parameters(model)
     print(f"Model loaded. Trainable parameters: {trainable} / {total} ({trainable / total:.2%})")
 
-    # 根据 dataset_type 选择 loader 和 reward 函数
     dataset_type = getattr(cfg, "dataset_type", "gsm8k")
     if dataset_type not in DATASET_LOADERS:
         raise ValueError(f"Unknown dataset_type: {dataset_type}. Choose from {list(DATASET_LOADERS.keys())}")
@@ -383,7 +380,6 @@ def main() -> None:
         tokenizer=tokenizer,
     )
     
-    # 在 train_ds / eval_ds 加载之后，额外拿一份原始的 eval set 给 evaluate() 用
     if local_dataset_path and Path(local_dataset_path).exists():
         from datasets import load_from_disk
         eval_raw_ds = load_from_disk(local_dataset_path)[cfg.eval_split]
@@ -492,18 +488,14 @@ def main() -> None:
     
     print("Running initial evaluation before training...")
     trainer.evaluate(metric_key_prefix="eval_pre_base",      zero_v=True)   # pure base
-    trainer.evaluate(metric_key_prefix="eval_pre_lora_init", zero_v=False)  # init lora 未训练
+    trainer.evaluate(metric_key_prefix="eval_pre_lora_init", zero_v=False)  # init lora no train
 
     trainer.train()
 
     print("Running final evaluation after training...")
     trainer.evaluate(metric_key_prefix="eval_final")
 
-    # trainer.train()
 
-    # # 训练后评估
-    # print("Running final evaluation after training...")
-    # trainer.evaluate()
 
     untie_tinylora_shared_v(trainer.model)
 
