@@ -24,3 +24,4 @@ venv/
 *.bin
 .cache/
 configs/_runtime_*.yaml
+scripts/train_slurm.sh

@@ -19,7 +19,7 @@ This repository provides a clean Hugging Face / TRL training setup for reproduci
   - `weight_tying = 1.0` for the 13-parameter regime
   - target modules: `q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`
 
-## Important note about PEFT version
+<!-- ## Important note about PEFT version
 
 TinyLoRA is currently documented on the **PEFT `main` docs** and may require installing PEFT from source instead of the latest PyPI release.
 
@@ -27,14 +27,14 @@ This repo therefore installs:
 
 ```bash
 pip install git+https://github.com/huggingface/peft.git
-```
+``` -->
 
 ## Repository layout
 
 ```text
 .
 ├── configs/
-│   ├── qwen25_7b_tinylora_gsm8k.yaml
+│   ├── qwen25_7b_tinylora_gsm8k.yaml ##use this to change config 
 │   └── qwen25_7b_tinylora_gsm8k_debug.yaml
 ├── scripts/
 │   ├── train.sh

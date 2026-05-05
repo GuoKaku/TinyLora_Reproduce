@@ -1,5 +1,5 @@
 model_name_or_path: Qwen/Qwen2.5-7B-Instruct
-seed: 102
+seed: 42
 
 datasets:
   gsm8k:
@@ -68,8 +68,8 @@ target_modules:
   - up_proj
   - down_proj
 tinylora_r: 2
-tinylora_u: 32
-tinylora_weight_tying: 0.0
+tinylora_u: 13
+tinylora_weight_tying: 1.0
 tinylora_dropout: 0.0
 projection_seed: 42
 save_projection: true
