@@ -25,8 +25,6 @@ def gsm8k_exact_match_reward(completions, ground_truth, **kwargs):
     return scores
 
 
-from math_verify import verify, parse as math_parse
-
 def _extract_boxed(text: str) -> str:
     """从文本中提取最后一个 \\boxed{} 的内容，支持嵌套花括号"""
     idx = text.rfind(r"\boxed{")
@@ -45,6 +43,9 @@ def _extract_boxed(text: str) -> str:
 
 
 def math_exact_match_reward(completions, ground_truth, **kwargs):
+    from math_verify import parse as math_parse
+    from math_verify import verify
+
     scores: list[float] = []
     for completion, gold in zip(completions, ground_truth):
         if isinstance(completion, list):

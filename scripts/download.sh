@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HF_DIR=/scratch/gpfs/MENGDIW/jg8305/.cache/huggingface
+# HF_DIR=/scratch/gpfs/MENGDIW/jg8305/.cache/huggingface
+HF_DIR="${HF_DIR:-$HOME/.cache/huggingface}"
 
 mkdir -p "${HF_DIR}"
 
@@ -9,7 +10,7 @@ export HF_HOME="${HF_DIR}"
 export TRANSFORMERS_CACHE="${HF_DIR}"
 export HF_DATASETS_CACHE="${HF_DIR}"
 
-MODEL_NAME="Qwen/Qwen2.5-1.5B-Instruct"
+MODEL_NAME="Qwen/Qwen2.5-7B-Instruct"
 
 python - <<EOF
 from transformers import AutoTokenizer, AutoModelForCausalLM

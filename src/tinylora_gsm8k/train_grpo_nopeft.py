@@ -1,9 +1,17 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
+import sys
+
+# Transformers treats scikit-learn as an optional backend, but if a broken
+# sklearn/SciPy binary is present it can fail during import before training
+# starts. This GRPO path does not use sklearn-backed generation helpers.
+if os.environ.get("TINYLORA_DISABLE_SKLEARN", "1") == "1":
+    sys.modules.setdefault("sklearn", None)
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -21,7 +29,6 @@ from .utils import (
     set_seed,
 )
 
-import sys
 sys.stdout.reconfigure(line_buffering=True)
 
 REWARD_FNS = {
@@ -276,6 +283,10 @@ def build_model_and_tokenizer(cfg: ExperimentConfig):
     print(f"Building model and tokenizer for {cfg.model_name_or_path} with torch_dtype={cfg.torch_dtype}...")
     torch_dtype = maybe_torch_dtype(cfg.torch_dtype)
     cache_dir = getattr(cfg, "cache_dir", None) or os.environ.get("HF_HOME")
+    attn_implementation = cfg.attn_implementation
+    if attn_implementation == "flash_attention_2" and importlib.util.find_spec("flash_attn") is None:
+        attn_implementation = "sdpa"
+        print("[ATTN] flash_attention_2 requested but flash_attn is not installed; falling back to sdpa.")
 
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model_name_or_path,
@@ -292,8 +303,8 @@ def build_model_and_tokenizer(cfg: ExperimentConfig):
         "cache_dir": cache_dir,
         "local_files_only": True,
     }
-    if cfg.attn_implementation:
-        model_kwargs["attn_implementation"] = cfg.attn_implementation
+    if attn_implementation:
+        model_kwargs["attn_implementation"] = attn_implementation
 
     model = AutoModelForCausalLM.from_pretrained(
         cfg.model_name_or_path,

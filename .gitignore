@@ -23,5 +23,8 @@ venv/
 *.ckpt
 *.bin
 .cache/
+
+
 configs/_runtime_*.yaml
 scripts/train_slurm.sh
+scripts/gsm8k_local.py

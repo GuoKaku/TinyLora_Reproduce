@@ -6,7 +6,7 @@ datasets:
     dataset_name: openai/gsm8k
     dataset_config_name: main
     dataset_type: gsm8k
-    local_dataset_path: /scratch/gpfs/MENGDIW/jg8305/.cache/huggingface/gsm8k_local
+    local_dataset_path: null
     eval_local_dataset_path: null
     train_split: train
     eval_split: test
@@ -21,8 +21,8 @@ datasets:
     dataset_name: EleutherAI/hendrycks_math
     dataset_config_name: null
     dataset_type: math
-    local_dataset_path: /scratch/gpfs/MENGDIW/jg8305/.cache/huggingface/math_local
-    eval_local_dataset_path: /scratch/gpfs/MENGDIW/jg8305/.cache/huggingface/math_hard_local
+    local_dataset_path: null
+    eval_local_dataset_path: null
     train_split: train
     eval_split: test
     max_prompt_length: 1024

@@ -36,17 +36,20 @@ pip install git+https://github.com/huggingface/peft.git
 ├── configs/
 │   ├── qwen25_7b_tinylora_gsm8k.yaml ##use this to change config 
 │   └── qwen25_7b_tinylora_gsm8k_debug.yaml
-├── scripts/
-│   ├── train.sh
-│   └── eval.sh
+plot_scripts/
+scripts/
+├── download.sh. ##for downloading dataset and model
+├── eval.sh. ##evaluate ckpts, no need to manually run
+├── train_nopeft.sh.    ##run this to start training
+├── train_nopeft_slurm.sh. ## run this to submit slurm job for training
 ├── src/tinylora_gsm8k/
 │   ├── __init__.py
 │   ├── config.py
-│   ├── data.py
+│   ├── data.py 
 │   ├── eval_gsm8k.py
 │   ├── prompts.py
-│   ├── rewards.py
-│   ├── train_grpo.py
+│   ├── rewards.py  
+│   ├── train_grpo.py. ## core file to construct TinyLora
 │   └── utils.py
 └── requirements.txt
 ```
@@ -62,44 +65,88 @@ export PYTHONPATH=$PWD/src:$PYTHONPATH
 
 ## Training
 
-Paper-like config:
+### 1. Download model and dataset
+
+By default, models and datasets are downloaded to `~/.cache/huggingface`.
 
 ```bash
-bash scripts/train.sh configs/qwen25_7b_tinylora_gsm8k.yaml
+bash scripts/download.sh
 ```
 
-Small debug run:
+You can optionally specify a custom cache directory:
 
 ```bash
-bash scripts/train.sh configs/qwen25_7b_tinylora_gsm8k_debug.yaml
+HF_DIR=/path/to/cache bash scripts/download.sh
 ```
 
-You can also call the trainer directly:
+---
+
+### 2. Run training (single GPU)
 
 ```bash
-python -m tinylora_gsm8k.train_grpo --config configs/qwen25_7b_tinylora_gsm8k.yaml
+HF_DIR=/path/to/cache \
+DATASET=gsm8k \
+CONFIG_PATH=configs/qwen25_7b_tinylora.yaml \
+bash scripts/train_nopeft.sh
 ```
+
+* `HF_DIR`: HuggingFace cache directory (must match the download step)
+* `DATASET`: dataset name (e.g., `gsm8k`, `math`)
+* `CONFIG_PATH`: training config
+
+---
+
+### 3. Run training with Slurm (cluster)
+
+```bash
+HF_DIR=/path/to/cache \
+DATASET=gsm8k \
+CONFIG_PATH=configs/qwen25_7b_tinylora.yaml \
+sbatch scripts/train_nopeft_slurm.sh
+```
+
+> ⚠️ You may need to modify the `#SBATCH` fields (e.g., partition, account) in the script based on your cluster.
+
+---
+
+### Notes
+
+* If `local_dataset_path` in the config is `null`, the script will automatically use:
+
+  ```
+  $HF_DIR/gsm8k_local
+  ```
+
+* Offline mode is enabled by default. To allow downloading during training:
+
+```bash
+OFFLINE=0 bash scripts/train_nopeft.sh
+```
+
+* Outputs are saved to:
+
+```
+outputs/<job_name>_job<id>_<timestamp>/
+```
+
+
+
+
 
 ## Evaluation
 
-```bash
-bash scripts/eval.sh outputs/qwen25-7b-gsm8k-tinylora
-```
-
-or:
+Evaluation will be automatically done with the progress of training. More specificlly, evaluation will be done on the beginning and end of training, as well as the every steps specified in configs. If you want to run it manually, do
 
 ```bash
-python -m tinylora_gsm8k.eval_gsm8k \
-  --model_name_or_path Qwen/Qwen2.5-7B-Instruct \
-  --adapter_path outputs/qwen25-7b-gsm8k-tinylora/checkpoint-final \
-  --output_path outputs/qwen25-7b-gsm8k-tinylora/eval.json
+bash scripts/eval.sh /path/to/the/checkpoint
 ```
+
 
 ## Repro guidance
 
 This repo aims to match the paper's **algorithmic setting**, but exact leaderboard numbers can still vary because of:
 
-- PEFT / TRL / Transformers version drift
+- TRL / Transformers version drift
 - generation backend differences (the paper used VERL + vLLM in their RL stack)
 - optimizer / distributed setup details
 - hardware and random seed effects
@@ -109,14 +156,7 @@ This repo aims to match the paper's **algorithmic setting**, but exact leaderboa
 1. The paper's GSM8K setup uses **4 samples per problem**. In TRL this maps naturally to `num_generations=4`.
 2. TRL requires the effective batch size to be divisible by `num_generations`. This repo checks that.
 3. The exact-match reward is implemented on the **normalized final numeric answer**, extracted from GSM8K's reference answer and from the model's generated completion.
-4. The prompt template asks the model to reason normally and end with a line of the form:
-
-   ```text
-   Final answer: <answer>
-   ```
-
-   This makes exact-match scoring more stable.
 
 ## Suggested hardware
 
-For paper-like training with `Qwen/Qwen2.5-7B-Instruct`, bf16, long completions, and GRPO, use multi-GPU hardware if possible. A single-GPU debug path is provided, but the full paper-like setting is compute-heavy.
+We did our expeiments on a single H200 GPU with 144GB CUDA memory. During training, we found our used CUDA memory to be around 120GB. On such setting, an expeiment with the default setting will typically run 4~5 hours.
